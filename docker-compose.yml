@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+
+  postgres:
+    image: postgres:10-alpine
+    volumes:
+    - ${POSTGRES_VOLUME:-postgres-volume}:/var/lib/postgresql/data
+    environment:
+    - POSTGRES_DB=${POSTGRES_DB}
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    - POSTGRES_USER=${POSTGRES_USER}
+
+  teamcity:
+    image: jetbrains/teamcity-server
+    depends_on:
+    - postgres
+    volumes:
+    - ${TEAMCITY_DATA_VOLUME:-teamcitydata-volume}:/data/teamcity_server/datadir
+    - ${TEAMCITY_LOGS_VOLUME:-teamcitylogs-volume}:/opt/teamcity/logs
+    ports:
+    - "8111:8111"
+
+  teamcity-agent:
+    image: jetbrains/teamcity-agent
+    depends_on:
+    - teamcity
+    volumes:
+    - ${TEAMCITY_AGENT_VOLUME:-teamcityagent-volume}:/data/teamcity_agent/conf
+    environment:
+    - SERVER_URL=http://teamcity:8111
+
+volumes:
+  postgres-volume:
+  teamcitydata-volume:
+  teamcitylogs-volume:
+  teamcityagent-volume:
